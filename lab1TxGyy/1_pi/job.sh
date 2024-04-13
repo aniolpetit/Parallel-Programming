@@ -2,13 +2,13 @@
 
 #SBATCH --job-name=pi
 #SBATCH -p ippd-cpu
-#SBATCH --output=sieve_%j.out
-#SBATCH --error=sieve_%j.err
+#SBATCH --output=pi_%j.out
+#SBATCH --error=pi_%j.err
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --time=00:00:10
 
-make seq || exit 1  # Exit if make fails
+make par || exit 1  # Exit if make fails
 
-./pi_seq 1000000
+./pi_par 1000000
