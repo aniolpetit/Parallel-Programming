@@ -9,6 +9,6 @@
 #SBATCH --nodes=1
 #SBATCH --time=00:00:10
 
-make par || exit 1  # Exit if make fails
+make task || exit 1  # Exit if make fails
 
-./pi_par 1000000
+./pi_task 1048576 1024
