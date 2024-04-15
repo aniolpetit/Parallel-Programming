@@ -18,14 +18,10 @@ int main(int argc, char* argv[]) {
     #pragma omp parallel
     {
         float local_sum = 0.0f;
-
-        #pragma omp for
         for(int i = 0; i < N; i++) {
             xi = (i + 0.5) * width;
             local_sum += 4 / (1 + xi * xi);
         }
-
-        #pragma omp atomic 
         pi += local_sum;
     }
     // Parallel region ends here
