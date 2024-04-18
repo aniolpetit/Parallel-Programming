@@ -21,9 +21,9 @@ void compute_pi_task(int start, int end, float width, float *result, int M) {
     else {
         int mid = (start + end) / 2;
         float partial_pi1, partial_pi2;
-        #pragma omp task shared(partial_pi1) firstprivate(start,mid,width,M)
+        #pragma omp task shared(partial_pi1) 
                 compute_pi_task(start, mid, width, &partial_pi1, M);
-        #pragma omp task shared(partial_pi2) firstprivate(mid,end,width,M)
+        #pragma omp task shared(partial_pi2) 
                 compute_pi_task(mid, end, width, &partial_pi2, M);
         #pragma omp taskwait
         *result = partial_pi1 + partial_pi2;
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     int M = atoi(argv[2]);
     
     if (M < 1024) {
-        printf("Each task must perform at least  1024 steps (M>=1024) ! \n");
+        printf("Each task must perform at least 1024 steps (M>=1024) ! \n");
         exit(1);
     }
 
