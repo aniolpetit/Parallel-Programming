@@ -10,7 +10,9 @@
 #SBATCH --time=00:00:10
 
 # Compile all versions
-make all || exit 1  # Exit if make fails
+make seq || exit 1  # Exit if make fails
+make par || exit 1 
+make task || exit 1 
 
 # Execute sequential version
 echo "Running sequential version..."
