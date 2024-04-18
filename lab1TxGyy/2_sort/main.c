@@ -34,6 +34,9 @@ int main(int argc, char* argv[]) {
     printf("Sequential: %f sec\n",time_seq);
     
     fill_array(array, n);
+    print_array(array, n);
+    printf("\n");
+    
     
     start=omp_get_wtime();
     sort_openmp(array, n);
@@ -42,6 +45,9 @@ int main(int argc, char* argv[]) {
     printf("OpenMP: %f sec\n",time_omp);
     
     printf("OpenMP was %f times faster\n",time_seq/time_omp);
+
+    
+
     
     return 0;
 }

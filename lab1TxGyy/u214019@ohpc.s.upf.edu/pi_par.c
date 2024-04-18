@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     }
 
     int N = atoi(argv[1]);
-    omp_set_num_threads(16);
+    omp_set_num_threads(4);
     float pi = 0;
     float width = (float) 1/N;
     float xi = 0;

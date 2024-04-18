@@ -9,6 +9,20 @@
 #SBATCH --nodes=1
 #SBATCH --time=00:00:10
 
-make task || exit 1  # Exit if make fails
+# Compile all versions
+make all || exit 1  # Exit if make fails
 
+# Execute sequential version
+echo "Running sequential version..."
+./pi_seq 1048576
+echo
+
+# Execute parallel version
+echo "Running parallel version..."
+./pi_par 1048576
+echo
+
+# Execute task-based parallel version
+echo "Running task-based parallel version..."
 ./pi_task 1048576 1024
+echo
