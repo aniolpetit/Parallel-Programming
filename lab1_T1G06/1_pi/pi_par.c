@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
     int nthreads = omp_get_max_threads();
     double *local_sum = (double *)malloc(nthreads * sizeof(double));
     double start_time, end_time;
+    double width = (double)1/N;
 
     start_time = omp_get_wtime();
 
@@ -25,20 +26,17 @@ int main(int argc, char* argv[]) {
         local_sum[id] = 0.0;
 
         for(int i = id; i < N; i += nthreads) {
-            double xi = (i + 0.5) / N;
+            double xi = (i + 0.5)*width;
             local_sum[id] += 4.0 / (1.0 + xi * xi);
         }
     }
     // Parallel region ends here
-
-    
-
     // Summing up the local sums from each thread
     for(int i = 0; i < nthreads; i++) {
         sum += local_sum[i];
     }
 
-    pi = sum / N;
+    pi = sum*width;
     end_time = omp_get_wtime();
     printf("\nPi with %d steps is %.15lf in %lf seconds\n", N, pi, end_time - start_time);
 
