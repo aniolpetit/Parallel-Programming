@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include "sort.h"
+#include <limits.h>
 
 int sort(int *array, int n) {
     int i, j, tmp;
@@ -41,23 +42,22 @@ int sort_openmp(int *array, int n){
             // Insert the current element at its correct position
             tmp_array[j + 1] = tmp;
         }
-    }
-    
+    }    
  
     // Save the first position of each thread
     int *head_i = (int *)malloc(sizeof(int) * _NUM_THREADS);
     int *is_finished = (int *)malloc(sizeof(int) * _NUM_THREADS);
     for (int i = 0; i < _NUM_THREADS; i++) {
         head_i[i] = i * chunk_size;
-        is_finished[i] = 1; // Initialize to 1 to indicate segments are not yet finished
+        is_finished[i] = 0; // Initialize to 0 to indicate segments are not yet finished
     }
 
     for (int i = 0; i < n; i++) {
-        int min = tmp_array[head_i[0]];
+        int min = INT_MAX;
         int control = 0;
         // Find the minimum element among the heads of the sorted segments
-        for (int j = 1; j < _NUM_THREADS; j++) {
-            if (is_finished[j] && tmp_array[head_i[j]] < min) {
+        for (int j = 0; j < _NUM_THREADS; j++) {
+            if (!is_finished[j] && tmp_array[head_i[j]] < min) {
                 min = tmp_array[head_i[j]];
                 control = j;
             }
@@ -66,16 +66,12 @@ int sort_openmp(int *array, int n){
         // Move to the next element in the segment from which the minimum was selected
         head_i[control]++;
         // Check if the current segment is finished
-        if (head_i[control] >= (control + 1) * chunk_size || head_i[control] >= n) {
-            is_finished[control] = 0; // Mark the segment as finished
+        if (head_i[control] >= (control + 1) * chunk_size) {
+            is_finished[control] = 1; // Mark the segment as finished
         }
     }
-
     free(head_i);
     free(is_finished);
-    print_array(array, n);
- 
-      
 }
 
 void fill_array(int *array, int n) {
@@ -84,11 +80,5 @@ void fill_array(int *array, int n) {
     srand(time(NULL));
     for(i=0; i < n; i++) {
         array[i] = rand()%n;
-    }
-}
-
-void print_array(int *array1, int n){
-    for(int i = 0; i < n; i++){
-        printf("%d, ", array1[i]);
     }
 }

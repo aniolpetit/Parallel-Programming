@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     float end_time = omp_get_wtime();
     float runtime = end_time - start_time;
 
-    printf("\n Pi with %d steps is %.15lf in %lf seconds", N, pi, runtime);
+    printf("\nPi with %d steps is %.15lf in %lf seconds", N, pi, runtime);
 
     return 0;
 }

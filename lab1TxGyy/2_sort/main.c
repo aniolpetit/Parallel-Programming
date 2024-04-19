@@ -33,10 +33,7 @@ int main(int argc, char* argv[]) {
     time_seq = end-start;
     printf("Sequential: %f sec\n",time_seq);
     
-    fill_array(array, n);
-    print_array(array, n);
-    printf("\n");
-    
+    fill_array(array, n);    
     
     start=omp_get_wtime();
     sort_openmp(array, n);

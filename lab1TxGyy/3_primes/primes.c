@@ -62,6 +62,7 @@ int prime_default ( int n ) {
 	int prime;
 	int total = 0;
 
+	#pragma omp parallel for default(none) shared(n) private(i, j, prime) reduction(+:total)
 	for ( i = 2; i <= n; i++ )
 	{
 		prime = 1;
@@ -83,6 +84,8 @@ int prime_static ( int n ) {
 	int prime;
 	int total = 0;
 
+	
+	#pragma omp parallel for default(none) shared(n) private(i, j, prime) reduction(+:total) schedule(static, 64)
 	for ( i = 2; i <= n; i++ ){
 		prime = 1;
 		for ( j = 2; j < i; j++ ){
@@ -102,6 +105,7 @@ int prime_dynamic ( int n ) {
 	int prime;
 	int total = 0;
 
+	#pragma omp parallel for default(none) shared(n) private(i, j, prime) reduction(+:total) schedule(dynamic, 64)
 	for ( i = 2; i <= n; i++ ) {
 		prime = 1;
 		for ( j = 2; j < i; j++ ) {

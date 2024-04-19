@@ -9,6 +9,5 @@
 int sort(int *array, int n);
 int sort_openmp(int *array, int n);
 void fill_array(int *array, int n);
-void print_array(int* array1, int n);
 
 #endif
