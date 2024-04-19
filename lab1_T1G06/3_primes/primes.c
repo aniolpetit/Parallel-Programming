@@ -22,7 +22,7 @@ int main ( int argc, char *argv[] ) {
 	printf ( "  Number of threads =              %d\n", omp_get_max_threads ( )  );
 
 	n_lo = 1;
-	n_hi = 131072;
+	n_hi = 500000;
 	n_factor = 2;
 
 	printf ( "\n" );

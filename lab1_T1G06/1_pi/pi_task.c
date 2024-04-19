@@ -21,9 +21,9 @@ void compute_pi_task(int start, int end, float width, float *result, int M) {
     else {
         int mid = (start + end) / 2;
         float partial_pi1, partial_pi2;
-        #pragma omp task shared(partial_pi1) 
+        #pragma omp task shared(partial_pi1) firstprivate(start,mid,width,min_steps)
                 compute_pi_task(start, mid, width, &partial_pi1, M);
-        #pragma omp task shared(partial_pi2) 
+        #pragma omp task shared(partial_pi2) firstprivate(mid,end,width,min_steps)
                 compute_pi_task(mid, end, width, &partial_pi2, M);
         #pragma omp taskwait
         *result = partial_pi1 + partial_pi2;
