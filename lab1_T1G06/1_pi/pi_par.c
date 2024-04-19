@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     }
     // Parallel region ends here
 
-    end_time = omp_get_wtime();
+    
 
     // Summing up the local sums from each thread
     for(int i = 0; i < nthreads; i++) {
@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
     }
 
     pi = sum / N;
+    end_time = omp_get_wtime();
     printf("\nPi with %d steps is %.15lf in %lf seconds\n", N, pi, end_time - start_time);
 
     free(local_sum);
