@@ -3,9 +3,9 @@
 #include <omp.h>
 
 
-float compute_pi(int start, int end, float width) {
-    float partial_pi = 0;
-    float xi, fxi;
+double compute_pi(int start, int end, double width) {
+    double partial_pi = 0;
+    double xi, fxi;
     for (int i = start; i < end; i++) {
         xi = (i + 0.5) * width;
         fxi = 4 / (1 + xi * xi);
@@ -14,16 +14,16 @@ float compute_pi(int start, int end, float width) {
     return partial_pi;
 }
 
-void compute_pi_task(int start, int end, float width, float *result, int M) {
+void compute_pi_task(int start, int end, double width, double *result, int M) {
     if (end - start <= M) {
         *result = compute_pi(start, end, width);
     } 
     else {
         int mid = (start + end) / 2;
-        float partial_pi1, partial_pi2;
-        #pragma omp task shared(partial_pi1) firstprivate(start,mid,width,min_steps)
+        double partial_pi1, partial_pi2;
+        #pragma omp task shared(partial_pi1) 
                 compute_pi_task(start, mid, width, &partial_pi1, M);
-        #pragma omp task shared(partial_pi2) firstprivate(mid,end,width,min_steps)
+        #pragma omp task shared(partial_pi2) 
                 compute_pi_task(mid, end, width, &partial_pi2, M);
         #pragma omp taskwait
         *result = partial_pi1 + partial_pi2;
@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    float pi = 0;
-    float width = 1.0 / N;
-    float start_time = omp_get_wtime();
+    double pi = 0;
+    double width = 1.0 / N;
+    double start_time = omp_get_wtime();
     #pragma omp parallel
     {
         #pragma omp single
@@ -55,8 +55,8 @@ int main(int argc, char *argv[]) {
         }        
     }
     pi *= width;
-    float end_time = omp_get_wtime();
-    float runtime = end_time - start_time;
+    double end_time = omp_get_wtime();
+    double runtime = end_time - start_time;
 
     printf("\nPi with %d steps is %.15lf in %lf seconds", N, pi, runtime);
 

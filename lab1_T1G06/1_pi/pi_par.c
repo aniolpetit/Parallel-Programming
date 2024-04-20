@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     }
 
     int N = atoi(argv[1]);
-    omp_set_num_threads(32);
+    omp_set_num_threads(8);
     double pi = 0.0;
     int nthreads = omp_get_max_threads();
     double *local_sum = (double *)malloc(nthreads * sizeof(double));

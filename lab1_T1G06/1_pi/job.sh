@@ -16,15 +16,15 @@ make task || exit 1
 
 # Execute sequential version
 echo "Running sequential version..."
-./pi_seq 1048576
+./pi_seq 1073741824
 echo
 
 # Execute parallel version
 echo "Running parallel version..."
-./pi_par 1048576
+./pi_par 1073741824
 echo
 
 # Execute task-based parallel version
 echo "Running task-based parallel version..."
-./pi_task 1048576 1024
+./pi_task 1073741824 1048576 
 echo

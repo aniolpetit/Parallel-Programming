@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <omp.h>
 
-//IF N IS GREAT (1024^3 FOR INSTANCE) I DON'T GET A CORRECT RESULT, ACTUALLY NOTHING. WHY?
 int main(int argc, char* argv[]) {
     if(argc < 2) {
         printf("N must be passed as a parameter!");
@@ -10,42 +9,36 @@ int main(int argc, char* argv[]) {
     }
 
     int N = atoi(argv[1]);
-    omp_set_num_threads(16);
-    float pi = 0;
-    float width = (float) 1/N;
-    float xi = 0;
-    float start_time = omp_get_wtime();
-    int nthreads = omp_get_num_threads();
-    float *local_sum = (float *)malloc(nthreads * sizeof(float));
+    omp_set_num_threads(32);
+    double pi = 0.0;
+    int nthreads = omp_get_max_threads();
+    double *local_sum = (double *)malloc(nthreads * sizeof(double));
+    double start_time, end_time;
+    double width = (double)1/N;
+
+    start_time = omp_get_wtime();
 
     // Parallel region starts here
     #pragma omp parallel
     {
         int id = omp_get_thread_num();
-       
-        int first = N/nthreads*id;
-        int last = N/nthreads*(id+1);
+        local_sum[id] = 0.0;
 
-        if(last > N){
-            last = N;
-        }
-        
-        local_sum[id] = 0.0f;
-        for(int i = first; i < last; i++) {
-            xi = (i + 0.5) * width;
-            local_sum[id] += 4 / (1 + xi * xi);
+        for(int i = id; i < N; i += nthreads) {
+            double xi = (i + 0.5)*width;
+            local_sum[id] += 4.0 / (1.0 + xi * xi);
         }
     }
     // Parallel region ends here
+    // Summing up the local sums from each thread
     for(int i = 0; i < nthreads; i++) {
         pi += local_sum[i];
     }
 
-    pi *= width;
-    float end_time = omp_get_wtime();
-    float runtime = end_time - start_time;
+    pi = pi*width;
+    end_time = omp_get_wtime();
+    printf("\nPi with %d steps is %.15lf in %lf seconds\n", N, pi, end_time - start_time);
 
-    printf("\nPi with %d steps is %.15lf in %lf seconds", N, pi, runtime);
-
+    free(local_sum);
     return 0;
 }
