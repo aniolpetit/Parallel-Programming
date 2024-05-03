@@ -55,9 +55,9 @@ int main(int argc, char* argv[]) {
     // Gather local integral arrays to process 0
     double* integral = NULL;
     if (rank == 0) {
-        integral = (double *)malloc(N * sizeof(double));
+        integral = (double *)malloc(size * sizeof(double));
     }
-
+x
     MPI_Gather(&local_integral[local_size - 1], 1, MPI_DOUBLE, integral, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     // Print results on process 0

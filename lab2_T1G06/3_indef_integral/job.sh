@@ -18,8 +18,12 @@ make par >> make_par.out || exit 1  # Compile parallel version
 
 # Run sequential version
 echo "Running sequential version..."
-./indef_integral_seq 1000000000 1000 
+./indef_integral_seq 100000000 1000 
 # Run parallel version
 echo "Running parallel version..."
-mpirun -n 4 indef_integral_par 1000000000 1000 
+mpirun -n 4 indef_integral_par 100000000 1000 
+
+# Visualize the solution generated
+echo "Visualizing the solution..."
+python3 plot_indef_integral.py indef_integral_mpi.info
 
