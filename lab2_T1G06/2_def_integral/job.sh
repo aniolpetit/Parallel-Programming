@@ -13,8 +13,8 @@ module load OpenMPI/4.1.2-GCC-10.2.0-with-slurm
 
 
 
-make seq >> make_seq.out || exit 1  # Compile sequential version
-make par >> make_par.out || exit 1  # Compile parallel version
+make seq || exit 1  # Compile sequential version
+make par || exit 1  # Compile parallel version
 
 # Run sequential version
 echo "Running sequential version..."

@@ -13,6 +13,6 @@ module load OpenMPI/4.1.2-GCC-10.2.0-with-slurm
 
 export OMP_NUM_THREADS=1
 
-make || exit 1 # Exit if make fails
+make >> make.out || exit 1 # Exit if make fails
 
 mpirun -n 4 mpi_comms
