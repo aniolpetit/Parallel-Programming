@@ -1,0 +1,5 @@
+# Indefinite integral version MPI
+data indef_integral_mpi.dat
+N 100000000
+XMAX 1000.000000
+size 4
