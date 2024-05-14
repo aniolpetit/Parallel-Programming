@@ -3,16 +3,17 @@
 #include<math.h>
 #include<omp.h>
 
-void axpy_cpu(int n, double alpha, double* x, double* y)
-{
-    
-
+void axpy_cpu(int n, double alpha, double* x, double* y){
+    for(int i = 0; i < n; i++){
+        y[i] += alpha*x[i];
+    }
 }
 
-void axpy_gpu(int n, double alpha, double* x, double* y)
-{
-    
-
+void axpy_gpu(int n, double alpha, double* x, double* y){
+    #pragma acc parallel loop present(x, y)
+    for (int i = 0; i < n; i++) {
+        y[i] += alpha * x[i];
+    }
 }
 
 
