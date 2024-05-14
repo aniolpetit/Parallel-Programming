@@ -11,10 +11,4 @@
 module load NVHPC
 
 make || exit 1
-./dot.x 10
-./dot.x 100
-./dot.x 1000
-./dot.x 10000
-./dot.x 100000
 ./dot.x 1000000
-./dot.x 10000000
