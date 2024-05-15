@@ -4,16 +4,16 @@
 #include<omp.h>
 
 double dot_product_cpu(int n, double* x, double* y){
-    double result = 0.0;
+    double dot_cpu = 0.0;
     for(int i = 0; i < n; i++){
-        result += x[i]*y[i];
+        dot_cpu += x[i]*y[i];
     }
-    return result;
+    return dot_cpu;
 }
 
 double dot_product_gpu(int n, double* x, double* y){
     double result = 0.0;
-    #pragma acc parallel loop present(x[:n], y[:n]) 
+    #pragma acc parallel loop present(x[:n], y[:n]) create(result) reduction(+:result) 
     for(int i = 0; i < n; i++){
         result += x[i]*y[i];
     }
@@ -48,16 +48,15 @@ int main(int argc, char **argv)
     time_end = omp_get_wtime();
     time_cpu = time_end - time_start;
 
-    #pragma acc enter data copyin(x[:vec_size], y[:vec_size])
+    #pragma acc enter data copyin(x[:vec_size], y[:vec_size], dot_gpu)
     time_start = omp_get_wtime();
 
     for(int i = 0; i < 100; i++)
         dot_gpu = dot_product_gpu(vec_size, x, y);
-
-        
+       
     time_end = omp_get_wtime();
     time_gpu = time_end - time_start;
-    #pragma acc exit data copyout(x[:vec_size], y[:vec_size])
+    #pragma acc exit data copyout(dot_gpu)
 
 
     printf("dot product comparison cpu vs gpu %e, size %d\n",

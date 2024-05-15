@@ -6,14 +6,30 @@
 #define N 1024    // number of matrix rows will be N*N
 #define ROWSIZE 9 // number of nonzero cols of sparse matrix
 
-void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y)
-{
-
+void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y){
+    for(int i = 0; i < m; i++){
+        double partial_sum = 0.0;
+        for(int j = 0; j < r; j++){
+            int idx = i*r + j;
+            partial_sum += vals[idx]*x[cols[idx]];
+        }
+        y[i] = partial_sum;
+    }
 }
 
-void spmv_gpu(int m, int r, double* vals, int* cols, double* x, double* y)
-{
-
+void spmv_gpu(int m, int r, double *vals, int *cols, double *x, double *y){
+    #pragma acc parallel loop gang vector present(vals[:m*r], cols[:m*r], x[:m], y[:m])
+    for (int i = 0; i < m; i++)
+    {
+        double partial_sum = 0.0;
+        #pragma acc loop reduction(+:partial_sum) 
+        for (int j = 0; j < r; j++)
+        {
+            int idx = i*r + j;
+            partial_sum += vals[idx]*x[cols[idx]];
+        }
+        y[i] = partial_sum;
+    }
 }
 
 
@@ -96,7 +112,7 @@ int main()
     time_end = omp_get_wtime();
     time_cpu = time_end - time_start;
 
-
+    #pragma acc enter data copyin(Avals[:vec_size*ROWSIZE], Acols[:vec_size*ROWSIZE], x[:vec_size], y_gpu[:vec_size]) 
     time_start = omp_get_wtime();
 
     for(int i = 0; i < 100; i++)
@@ -104,7 +120,7 @@ int main()
 
     time_end = omp_get_wtime();
     time_gpu = time_end - time_start;
-
+    #pragma acc exit data copyout(y_gpu[:vec_size])
 
 
     // compare gpu and cpu results
