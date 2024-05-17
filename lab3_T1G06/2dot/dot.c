@@ -4,11 +4,11 @@
 #include<omp.h>
 
 double dot_product_cpu(int n, double* x, double* y){
-    double dot_cpu = 0.0;
+    double result = 0.0;
     for(int i = 0; i < n; i++){
-        dot_cpu += x[i]*y[i];
+        result += x[i]*y[i];
     }
-    return dot_cpu;
+    return result;
 }
 
 double dot_product_gpu(int n, double* x, double* y){

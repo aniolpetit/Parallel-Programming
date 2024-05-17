@@ -7,20 +7,46 @@
 #define ROWSIZE 9
 
 // spmv_cpu is needed to compute the right hand side vector
-void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y)
-{
+void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y){
+    for(int i = 0; i < m; i++){
+        double partial_sum = 0.0;
+        for(int j = 0; j < r; j++){
+            int idx = i*r + j;
+            partial_sum += vals[idx]*x[cols[idx]];
+        }
+        y[i] = partial_sum;
+    }
 }
 
-void spmv_gpu(int m, int r, double* vals, int* cols, double* x, double* y)
-{
+void spmv_gpu(int m, int r, double* vals, int* cols, double* x, double* y){
+    #pragma acc parallel loop gang vector present(vals[:m*r], cols[:m*r], x[:m], y[:m])
+    for (int i = 0; i < m; i++)
+    {
+        double partial_sum = 0.0;
+        #pragma acc loop reduction(+:partial_sum) 
+        for (int j = 0; j < r; j++)
+        {
+            int idx = i*r + j;
+            partial_sum += vals[idx]*x[cols[idx]];
+        }
+        y[i] = partial_sum;
+    }
 }
 
-void axpy_gpu(int n, double alpha, double* x, double* y)
-{
+void axpy_gpu(int n, double alpha, double* x, double* y){
+    #pragma acc parallel loop present(x[:n], y[:n])
+    for (int i = 0; i < n; i++) {
+        y[i] += alpha * x[i];
+    }
 }
 
-double dot_product_gpu(int n, double* x, double* y)
-{
+double dot_product_gpu(int n, double* x, double* y){
+    double result = 0.0;
+    #pragma acc parallel loop present(x[:n], y[:n]) create(result) reduction(+:result) 
+    for(int i = 0; i < n; i++){
+        result += x[i]*y[i];
+    }
+    return result;
 }
 
 
@@ -89,7 +115,11 @@ void cg_gpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x)
     double* Ax = (double*) malloc (vec_size*sizeof(double));
     double* r0 = (double*) malloc (vec_size*sizeof(double));
     double* p0 = (double*) malloc (vec_size*sizeof(double));
+    
+    #pragma acc enter data create(Ax[:vec_size], r0[:vec_size], p0[:vec_size])
 
+
+    #pragma acc parallel loop present(r0[:vec_size], rhs[:vec_size])
     for(int i = 0; i < vec_size; i++)
     {
         r0[i] = rhs[i];
@@ -99,12 +129,13 @@ void cg_gpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x)
 
     axpy_gpu(vec_size, -1.0, Ax, r0);
 
+    #pragma acc parallel loop present(p0[:vec_size], r0[:vec_size])
     for(int i = 0; i < vec_size; i++)
     {
         p0[i] = r0[i];
     }
 
-
+    
     for(int k = 0; k < iterations; k++) 
     {
         spmv_gpu(vec_size, ROWSIZE, Avals, Acols, p0 , Ax);
@@ -124,10 +155,12 @@ void cg_gpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x)
             printf("Iteration %d, residual %e\n", k, rho1);
 
         beta = rho1/rho0;
-
+        #pragma acc parallel loop present(p0[:vec_size], r0[:vec_size])
         for(int i = 0; i < vec_size; i++)
             p0[i] = r0[i] + beta*p0[i];
     }
+
+    #pragma acc exit data delete(Ax[:vec_size], r0[:vec_size], p0[:vec_size])
 
     free(Ax);
     free(r0);
@@ -159,11 +192,13 @@ int main()
     fill_matrix(Avals, Acols);
     create_solution_and_rhs(vec_size, Avals, Acols, x_sol, rhs);
 
+    #pragma acc enter data copyin(Avals[:vec_size*ROWSIZE], Acols[:vec_size*ROWSIZE], rhs[:vec_size], x_sol[:vec_size], x_gpu[:vec_size])
     time_start = omp_get_wtime();
 
     cg_gpu(vec_size, Avals, Acols, rhs, x_gpu);
 
     time_gpu = omp_get_wtime() - time_start;
+    #pragma acc exit data copyout(x_gpu[:vec_size], x_sol[:vec_size])
 
     // compare gpu solution with real solution
     double norm2 = 0.0;

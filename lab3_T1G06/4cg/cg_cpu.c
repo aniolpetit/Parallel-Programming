@@ -6,16 +6,29 @@
 #define N 1024
 #define ROWSIZE 9
 
-void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y)
-{
+void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y){
+    for(int i = 0; i < m; i++){
+        double partial_sum = 0.0;
+        for(int j = 0; j < r; j++){
+            int idx = i*r + j;
+            partial_sum += vals[idx]*x[cols[idx]];
+        }
+        y[i] = partial_sum;
+    }
 }
 
-void axpy_cpu(int n, double alpha, double* x, double* y)
-{
+void axpy_cpu(int n, double alpha, double* x, double* y){
+    for(int i = 0; i < n; i++){
+        y[i] += alpha*x[i];
+    }
 }
 
-double dot_product_cpu(int n, double* x, double* y)
-{
+double dot_product_cpu(int n, double* x, double* y){
+    double result = 0.0;
+    for(int i = 0; i < n; i++){
+        result += x[i]*y[i];
+    }
+    return result;
 }
 
 
@@ -74,8 +87,9 @@ void create_solution_and_rhs(int vecsize, double* Avals, int* Acols, double* xso
     spmv_cpu(vecsize, ROWSIZE, Avals, Acols, xsol, rhs);
 }
 
-void cg_cpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x)
-{
+void cg_cpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x){
+
+    //Should we modify this? Result is already correct with this version but could apply some little changes, ask
 
     int iterations = 500;
 
@@ -90,7 +104,7 @@ void cg_cpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x)
         r0[i] = rhs[i];
     }
 
-    spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, Ax);
+        spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, Ax);
 
     axpy_cpu(vec_size, -1.0, Ax, r0);
 
@@ -106,7 +120,7 @@ void cg_cpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x)
  
         rho0 = dot_product_cpu(vec_size, r0, r0);
         denom = dot_product_cpu(vec_size, p0, Ax);
-
+ 
         alpha = rho0/denom;
 
         axpy_cpu(vec_size, alpha, p0, x);
@@ -165,7 +179,7 @@ int main()
     for(int i = 0; i < vec_size; i++)
         norm2 += (x_cpu[i] - x_sol[i])*(x_cpu[i] - x_sol[i]);
 
-    printf("cg error in gpu solution: %e, size %d\n", sqrt(norm2), vec_size);
+    printf("cg error in cpu solution: %e, size %d\n", sqrt(norm2), vec_size);
 
     printf("Time CPU: %lf\n", time_cpu);
 
