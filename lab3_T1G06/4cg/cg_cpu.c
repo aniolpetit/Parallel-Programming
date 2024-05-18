@@ -104,8 +104,9 @@ void cg_cpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x){
         r0[i] = rhs[i];
     }
 
-        spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, Ax);
-
+   
+    spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, Ax);
+    
     axpy_cpu(vec_size, -1.0, Ax, r0);
 
     for(int i = 0; i < vec_size; i++)
@@ -115,11 +116,11 @@ void cg_cpu(int vec_size, double* Avals, int* Acols, double* rhs, double* x){
 
 
     for(int k = 0; k < iterations; k++) 
-    {
+    {   
         spmv_cpu(vec_size, ROWSIZE, Avals, Acols, p0, Ax);
- 
         rho0 = dot_product_cpu(vec_size, r0, r0);
-        denom = dot_product_cpu(vec_size, p0, Ax);
+        denom = dot_product_cpu(vec_size, p0, Ax);  
+        
  
         alpha = rho0/denom;
 
@@ -167,7 +168,6 @@ int main()
     // define a problem to test the cg code
     fill_matrix(Avals, Acols);
     create_solution_and_rhs(vec_size, Avals, Acols, x_sol, rhs);
-
     time_start = omp_get_wtime();
 
     cg_cpu(vec_size, Avals, Acols, rhs, x_cpu);

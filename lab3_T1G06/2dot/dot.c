@@ -13,7 +13,7 @@ double dot_product_cpu(int n, double* x, double* y){
 
 double dot_product_gpu(int n, double* x, double* y){
     double result = 0.0;
-    #pragma acc parallel loop present(x[:n], y[:n]) create(result) reduction(+:result) 
+    #pragma acc parallel loop present(x[:n], y[:n]) create(result) reduction(+:result) //copyout??
     for(int i = 0; i < n; i++){
         result += x[i]*y[i];
     }
