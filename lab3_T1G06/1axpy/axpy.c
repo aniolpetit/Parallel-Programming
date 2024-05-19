@@ -57,8 +57,7 @@ int main(int argc, char **argv)
     time_end = omp_get_wtime();
     time_gpu = time_end - time_start;
     #pragma acc exit data copyout(y_gpu[:vec_size])
-
-
+    
     // compare gpu and cpu results
     double norm2 = 0.0;
     for(int i = 0; i < vec_size; i++)

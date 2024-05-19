@@ -78,71 +78,6 @@ void fill_matrix(double* vals, int* cols)
     vals[4 + (N*N/2 + N/2)*ROWSIZE] =  1.001*vals[4 + (N*N/2 + N/2)*ROWSIZE];
 }
 
-void fill_matrix2(double* vals, int* cols) {
-    int row_count = 0;
-
-    // Initialize vals and cols arrays
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < ROWSIZE; j++) {
-            vals[i * ROWSIZE + j] = 0.0;
-            cols[i * ROWSIZE + j] = -1;
-        }
-    }
-
-    // Fill the main diagonal and inverse diagonal
-    for (int i = 0; i < N; i++) {
-        int count = 0;
-
-        // Main diagonal
-        vals[i * ROWSIZE + count] = 1.0;
-        cols[i * ROWSIZE + count] = i;
-        count++;
-
-        // Inverse diagonal
-        if (i != (N - 1 - i)) {
-            vals[i * ROWSIZE + count] = 2.0;
-            cols[i * ROWSIZE + count] = N - 1 - i;
-            count++;
-        }
-
-        // Fill the remaining space in vals and cols for this row with 0.0 and -1
-        while (count < ROWSIZE) {
-            vals[i * ROWSIZE + count] = 0.0;
-            cols[i * ROWSIZE + count] = -1;
-            count++;
-        }
-    }
-}
-
-void print_matrix(int m, int n, int r, double* vals, int* cols) {
-    double full_matrix[m][n];
-    
-    // Initialize the full matrix with zeros
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            full_matrix[i][j] = 0.0;
-        }
-    }
-
-    // Populate the full matrix with values from vals and cols arrays
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < r; j++) {
-            int col_index = cols[i * r + j];
-            if (col_index != -1) {
-                full_matrix[i][col_index] = vals[i * r + j];
-            }
-        }
-    }
-
-    // Print the full matrix
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            printf("%4.1f ", full_matrix[i][j]);
-        }
-        printf("\n");
-    }
-}
-
 
 int main()
 {
@@ -167,42 +102,23 @@ int main()
     }
 
     fill_matrix(Avals, Acols);
-   
-
 
     time_start = omp_get_wtime();
 
     for(int i = 0; i < 100; i++)
         spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, y_cpu);
-    
-  
 
     time_end = omp_get_wtime();
     time_cpu = time_end - time_start;
     
-    for(int i = 0; i<N; i++){
-        printf("%d: %f\n", i, y_cpu[i]);
-    }
-
-    for (int i = 0; i < vec_size; i++) {
-        y_gpu[i] = 0.0;
-    }
-
     #pragma acc enter data copyin(Avals[:vec_size*ROWSIZE], Acols[:vec_size*ROWSIZE], x[:vec_size], y_gpu[:vec_size]) 
     time_start = omp_get_wtime();
-
     for(int i = 0; i < 100; i++)
         spmv_gpu(vec_size, ROWSIZE, Avals, Acols, x, y_gpu);
-
 
     time_end = omp_get_wtime();
     time_gpu = time_end - time_start;
     #pragma acc exit data copyout(y_gpu[:vec_size])
-
-    for(int i = 0; i<N; i++){
-        printf("%d: %f\n", i, y_gpu[i]);
-    }
-
 
     // compare gpu and cpu results
     double norm2 = 0.0;

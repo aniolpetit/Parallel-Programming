@@ -39,7 +39,7 @@ void axpy_gpu(int n, double alpha, double* x, double* y) {
 
 double dot_product_gpu(int n, double* x, double* y){
     double result = 0.0;
-    #pragma acc parallel loop present(x[:n], y[:n]) reduction(+:result) //implicit copy
+    #pragma acc parallel loop present(x[:n], y[:n]) reduction(+:result) copy(result)
     for(int i = 0; i < n; i++){
         result += x[i]*y[i];
     }
