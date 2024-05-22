@@ -84,6 +84,7 @@ int main()
 
     float time_cpu, time_gpu;
     cudaEvent_t start, stop;
+
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
@@ -109,7 +110,7 @@ int main()
 
     for (int i = 0; i < 100; ++i)
         spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, y_cpu);
-
+    
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time_cpu, start, stop);
@@ -137,11 +138,11 @@ int main()
     int blocksPerGrid = (vec_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // create the gridBlock
 
+    cudaEventRecord(start);
     for( int i=0; i<100; i++){
         // call your GPU kernel here
         cuspmv<<<blocksPerGrid, THREADS_PER_BLOCK>>>(vec_size, ROWSIZE, dAvals, dAcols, dx, dy_gpu);
     }
-
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time_gpu, start, stop);
