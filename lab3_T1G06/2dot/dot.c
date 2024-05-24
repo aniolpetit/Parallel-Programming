@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     
     time_end = omp_get_wtime();
     time_cpu = time_end - time_start;
-    printf("Dot CPU with size = %d: %f\n", dot_cpu, vec_size);
+    printf("Dot CPU with size %d = %f\n", dot_cpu, vec_size);
 
     #pragma acc enter data copyin(x[:vec_size], y[:vec_size]) 
     time_start = omp_get_wtime();
@@ -57,8 +57,8 @@ int main(int argc, char **argv)
     time_end = omp_get_wtime();
     time_gpu = time_end - time_start;   
     
-    #pragma acc exit data delete(x[:vec_size], y[:vec_size])  
-    printf("Dot GPU with size = %d: %f\n", dot_gpu, vec_size);
+   
+    printf("Dot GPU with size %d = %f\n", dot_gpu, vec_size);
 
 
     printf("dot product comparison cpu vs gpu %e, size %d\n",
