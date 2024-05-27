@@ -7,29 +7,34 @@
 #define ROWSIZE 9
 #define THREADS_PER_BLOCK 128
 
-__global__ void cuspmv(int m, double* dvals, int *dcols, double* dx, double *dy)
-{
+__global__ void cuspmv(int m, double* dvals, int* dcols, double* dx, double *dy) {
     // Shared memory for storing the values of x
     __shared__ double s_x[THREADS_PER_BLOCK];
 
     int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int threadIndex = threadIdx.x;
 
     if (i < m) {
         double partial_sum = 0.0;
 
+        // Loop over all elements in the row
         for (int j = 0; j < ROWSIZE; j++) {
             int idx = i * ROWSIZE + j;
             int col = dcols[idx];
 
-            // Each thread loads one element of x into shared memory
-            if (threadIdx.x < ROWSIZE) {
-                s_x[threadIdx.x] = dx[col];
-            }
+            // Each thread loads its corresponding element of x into shared memory
+            s_x[threadIndex] = dx[col];
+            
             __syncthreads();
+            if(j==0 && i==0){
+                for(int i=100; i < 125; i++){
+                    printf("%f, ", s_x[i]);
+                }
+            }
 
-            // Use the value from shared memory
-            if (threadIdx.x == j) {
-                partial_sum += dvals[idx] * s_x[j];
+            // All threads now use the shared memory to perform the multiplication
+            if (threadIndex == j) {
+                partial_sum += dvals[idx] * s_x[threadIndex];
             }
             __syncthreads();
         }
@@ -37,8 +42,7 @@ __global__ void cuspmv(int m, double* dvals, int *dcols, double* dx, double *dy)
     }
 }
 
-void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y)
-{
+void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y) {
     for(int i = 0; i < m; i++) {
         double partial_sum = 0.0;
         for(int j = 0; j < r; j++) {
@@ -49,13 +53,11 @@ void spmv_cpu(int m, int r, double* vals, int* cols, double* x, double* y)
     }
 }
 
-void fill_matrix(double* vals, int* cols)
-{
+void fill_matrix(double* vals, int* cols) {
     int indx[ROWSIZE];
     int row_count = 0;
-    for(int j = 0; j < N ; j++){
-        for(int i = 0; i < N; i++){
-
+    for(int j = 0; j < N ; j++) {
+        for(int i = 0; i < N; i++) {
             indx[0] = i     + (j - 2)*N;
             indx[1] = i     + (j - 1)*N;
             indx[2] = i - 2 +  j     *N;
@@ -66,22 +68,15 @@ void fill_matrix(double* vals, int* cols)
             indx[7] = i     + (j + 1)*N;
             indx[8] = i     + (j + 2)*N;
 
-            for(int row = 0; row < ROWSIZE; row++)
-            {
-                if(indx[row] < 0 || indx[row] >= N*N)
-                {
+            for(int row = 0; row < ROWSIZE; row++) {
+                if(indx[row] < 0 || indx[row] >= N*N) {
                     cols[row + row_count*ROWSIZE] = i + j*N;
                     vals[row + row_count*ROWSIZE] = 0.0;
-                }
-                else
-                {
+                } else {
                     cols[row + row_count*ROWSIZE] = indx[row];
-                    if(row == 4)
-                    {
+                    if(row == 4) {
                         vals[row + row_count*ROWSIZE] = 0.95;
-                    }
-                    else
-                    {
+                    } else {
                         vals[row + row_count*ROWSIZE] = -0.95/(ROWSIZE - 1);
                     }
                 }
@@ -89,12 +84,10 @@ void fill_matrix(double* vals, int* cols)
             row_count++;
         }
     }
-
     vals[4 + (N*N/2 + N/2)*ROWSIZE] =  1.001*vals[4 + (N*N/2 + N/2)*ROWSIZE];
 }
 
-int main()
-{
+int main() {
     int vec_size = N*N;
 
     float time_cpu, time_gpu;
@@ -109,10 +102,8 @@ int main()
     double* Avals = (double*) malloc (ROWSIZE*vec_size*sizeof(double));
     int*    Acols = (int   *) malloc (ROWSIZE*vec_size*sizeof(int));
 
-
     // fill vector with sinusoidal for testing the code
-    for(int i = 0; i < vec_size; i++)
-    {
+    for(int i = 0; i < vec_size; i++) {
         x[i] = sin(i*0.01);
         y_cpu[i] = 0.0;
     }
@@ -121,24 +112,21 @@ int main()
 
     // measure time of CPU implementation
     cudaEventRecord(start);
-
-    for (int i = 0; i < 100; ++i)
-        spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, y_cpu);
-
+    //for (int i = 0; i < 100; ++i)
+    spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, y_cpu);
+    printf("\nCPU\n");
+    for(int i=100; i < 125; i++){
+        printf("%f, ", x[i]);
+    }
+    printf("\n");
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time_cpu, start, stop);
 
-
-    // complete here your cuda code
-    double* dx;
-    double* dy_gpu;
-
-    double* dAvals;
-    int*    dAcols;
-
-
     // allocate arrays in GPU
+    double *dx, *dy_gpu, *dAvals;
+    int *dAcols;
+
     cudaMalloc((void**)&dx, vec_size * sizeof(double));
     cudaMalloc((void**)&dy_gpu, vec_size * sizeof(double));
     cudaMalloc((void**)&dAvals, ROWSIZE * vec_size * sizeof(double));
@@ -154,9 +142,8 @@ int main()
 
     // measure time of GPU implementation
     cudaEventRecord(start);
-    for (int i = 0; i < 100; ++i)
-        cuspmv<<<blocksPerGrid, THREADS_PER_BLOCK>>>(vec_size, dAvals, dAcols, dx, dy_gpu);
-
+    //for (int i = 0; i < 100; ++i)
+    cuspmv<<<blocksPerGrid, THREADS_PER_BLOCK>>>(vec_size, dAvals, dAcols, dx, dy_gpu);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time_gpu, start, stop);
@@ -178,7 +165,6 @@ int main()
     norm2 = sqrt(norm2);
 
     printf("spmv comparison cpu vs gpu error: %e, size %d\n", norm2, vec_size);
-
     printf("CPU Time: %lf\n", time_cpu/1000);
     printf("GPU Time: %lf\n", time_gpu/1000);
 
