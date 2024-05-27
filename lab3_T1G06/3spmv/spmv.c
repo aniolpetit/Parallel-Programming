@@ -115,7 +115,7 @@ int main()
     time_start = omp_get_wtime();
     for(int i = 0; i < 100; i++)
         spmv_gpu(vec_size, ROWSIZE, Avals, Acols, x, y_gpu);
-
+    
     time_end = omp_get_wtime();
     time_gpu = time_end - time_start;
     #pragma acc exit data copyout(y_gpu[:vec_size])
