@@ -112,13 +112,8 @@ int main() {
 
     // measure time of CPU implementation
     cudaEventRecord(start);
-    //for (int i = 0; i < 100; ++i)
-    spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, y_cpu);
-    printf("\nCPU\n");
-    for(int i=100; i < 125; i++){
-        printf("%f, ", x[i]);
-    }
-    printf("\n");
+    for (int i = 0; i < 100; ++i)
+        spmv_cpu(vec_size, ROWSIZE, Avals, Acols, x, y_cpu);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time_cpu, start, stop);
@@ -142,8 +137,8 @@ int main() {
 
     // measure time of GPU implementation
     cudaEventRecord(start);
-    //for (int i = 0; i < 100; ++i)
-    cuspmv<<<blocksPerGrid, THREADS_PER_BLOCK>>>(vec_size, dAvals, dAcols, dx, dy_gpu);
+    for (int i = 0; i < 100; ++i)
+        cuspmv<<<blocksPerGrid, THREADS_PER_BLOCK>>>(vec_size, dAvals, dAcols, dx, dy_gpu);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time_gpu, start, stop);
