@@ -7,37 +7,26 @@
 #define ROWSIZE 9
 #define THREADS_PER_BLOCK 128
 
-__global__ void cuspmv(int m, double* dvals, int* dcols, double* dx, double *dy) {
-    // Shared memory for storing the values of x
-    __shared__ double s_x[THREADS_PER_BLOCK];
+__global__ void cuspmv(int m, double* dvals, int* dcols, double* dx, double* dy) {
+    __shared__ double s_vals[THREADS_PER_BLOCK * ROWSIZE];
+    __shared__ int s_cols[THREADS_PER_BLOCK * ROWSIZE];
 
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    int threadIndex = threadIdx.x;
+    int tid = threadIdx.x;
+    int i = blockIdx.x * blockDim.x + tid;
 
     if (i < m) {
         double partial_sum = 0.0;
 
-        // Loop over all elements in the row
+        // Load dvals and dcols into shared memory
         for (int j = 0; j < ROWSIZE; j++) {
-            int idx = i * ROWSIZE + j;
-            int col = dcols[idx];
-
-            // Each thread loads its corresponding element of x into shared memory
-            s_x[threadIndex] = dx[col];
-            
+            int base_idx = i * ROWSIZE + j;
+            s_vals[tid + j * blockDim.x] = dvals[base_idx];
+            s_cols[tid + j * blockDim.x] = dcols[base_idx];
             __syncthreads();
-            if(j==0 && i==0){
-                for(int i=100; i < 125; i++){
-                    printf("%f, ", s_x[i]);
-                }
-            }
-
-            // All threads now use the shared memory to perform the multiplication
-            if (threadIndex == j) {
-                partial_sum += dvals[idx] * s_x[threadIndex];
-            }
-            __syncthreads();
+            int col_idx = s_cols[tid + j * blockDim.x];
+            partial_sum += s_vals[tid + j * blockDim.x] * dx[col_idx];
         }
+
         dy[i] = partial_sum;
     }
 }
