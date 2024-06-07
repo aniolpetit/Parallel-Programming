@@ -10,9 +10,8 @@
 __global__ void cuspmv(int m, double* dvals, int* dcols, double* dx, double* dy) {
     __shared__ double s_vals[THREADS_PER_BLOCK * ROWSIZE];
     __shared__ int s_cols[THREADS_PER_BLOCK * ROWSIZE];
-
-    int tid = threadIdx.x;
-    int i = blockIdx.x * blockDim.x + tid;
+    
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < m) {
         double partial_sum = 0.0;
@@ -20,11 +19,11 @@ __global__ void cuspmv(int m, double* dvals, int* dcols, double* dx, double* dy)
         // Load dvals and dcols into shared memory
         for (int j = 0; j < ROWSIZE; j++) {
             int base_idx = i * ROWSIZE + j;
-            s_vals[tid + j * blockDim.x] = dvals[base_idx];
-            s_cols[tid + j * blockDim.x] = dcols[base_idx];
+            s_vals[threadIdx.x + j * blockDim.x] = dvals[base_idx];
+            s_cols[threadIdx.x + j * blockDim.x] = dcols[base_idx];
             __syncthreads();
-            int col_idx = s_cols[tid + j * blockDim.x];
-            partial_sum += s_vals[tid + j * blockDim.x] * dx[col_idx];
+            int col_idx = s_cols[threadIdx.x + j * blockDim.x];
+            partial_sum += s_vals[threadIdx.x + j * blockDim.x] * dx[col_idx];
         }
 
         dy[i] = partial_sum;
